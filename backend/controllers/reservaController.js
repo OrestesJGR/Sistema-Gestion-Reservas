@@ -27,6 +27,20 @@ const crearReserva = async (req, res) => {
   }
 };
 
+const obtenerReservasUsuario = async (req, res) => {
+  try {
+    const reservas = await Reserva.find({ usuario: req.usuario.id })
+      .populate('servicio', 'nombre descripcion') // traer info del servicio
+      .sort({ fecha: -1 });
+
+    res.json(reservas);
+  } catch (error) {
+    console.error('❌ Error al obtener reservas del usuario:', error);
+    res.status(500).json({ mensaje: 'Error al obtener reservas' });
+  }
+};
+
 module.exports = {
-  crearReserva
+  crearReserva,
+  obtenerReservasUsuario
 };
