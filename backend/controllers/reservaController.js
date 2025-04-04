@@ -42,6 +42,22 @@ const obtenerReservasUsuario = async (req, res) => {
   }
 };
 
+// Obtener todas las reservas del sistema (solo para admin)
+const obtenerTodasLasReservas = async (req, res) => {
+  try {
+    const reservas = await Reserva.find()
+      .populate('usuario', 'nombre email') // info del usuario que reservó
+      .populate('servicio', 'nombre descripcion') // info del servicio reservado
+      .sort({ fecha: -1 });
+
+    res.json(reservas);
+  } catch (error) {
+    console.error('❌ Error al obtener todas las reservas:', error);
+    res.status(500).json({ mensaje: 'Error al obtener todas las reservas' });
+  }
+};
+
+
 // Eliminar (cancelar) una reserva
 const eliminarReserva = async (req, res) => {
   try {
@@ -68,5 +84,6 @@ const eliminarReserva = async (req, res) => {
 module.exports = {
   crearReserva,
   obtenerReservasUsuario,
-  eliminarReserva
+  eliminarReserva,
+  obtenerTodasLasReservas 
 };

@@ -10,7 +10,8 @@ const usuarioSchema = new mongoose.Schema({
     type: String,
     required: true,
     unique: true,
-    trim: true
+    trim: true,
+    lowercase: true // ayuda a evitar registros duplicados con mayúsculas
   },
   password: {
     type: String,
@@ -19,7 +20,8 @@ const usuarioSchema = new mongoose.Schema({
   rol: {
     type: String,
     enum: ['usuario', 'moderador', 'admin'],
-    default: 'usuario'
+    default: 'usuario',
+    required: true
   },
   creadoEn: {
     type: Date,
