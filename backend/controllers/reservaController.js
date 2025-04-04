@@ -1,5 +1,6 @@
 const Reserva = require('../models/Reserva');
 
+// Crear nueva reserva
 const crearReserva = async (req, res) => {
   try {
     const { servicio, fecha, observaciones } = req.body;
@@ -27,10 +28,11 @@ const crearReserva = async (req, res) => {
   }
 };
 
+// Obtener reservas del usuario autenticado
 const obtenerReservasUsuario = async (req, res) => {
   try {
     const reservas = await Reserva.find({ usuario: req.usuario.id })
-      .populate('servicio', 'nombre descripcion') // traer info del servicio
+      .populate('servicio', 'nombre descripcion')
       .sort({ fecha: -1 });
 
     res.json(reservas);
@@ -40,7 +42,31 @@ const obtenerReservasUsuario = async (req, res) => {
   }
 };
 
+// Eliminar (cancelar) una reserva
+const eliminarReserva = async (req, res) => {
+  try {
+    const reserva = await Reserva.findById(req.params.id);
+
+    if (!reserva) {
+      return res.status(404).json({ mensaje: 'Reserva no encontrada' });
+    }
+
+    // Verifica que la reserva pertenezca al usuario
+    if (reserva.usuario.toString() !== req.usuario.id) {
+      return res.status(403).json({ mensaje: 'No tienes permiso para cancelar esta reserva' });
+    }
+
+    await reserva.deleteOne();
+
+    res.json({ mensaje: 'Reserva cancelada correctamente' });
+  } catch (error) {
+    console.error('❌ Error al cancelar reserva:', error);
+    res.status(500).json({ mensaje: 'Error al cancelar la reserva' });
+  }
+};
+
 module.exports = {
   crearReserva,
-  obtenerReservasUsuario
+  obtenerReservasUsuario,
+  eliminarReserva
 };
