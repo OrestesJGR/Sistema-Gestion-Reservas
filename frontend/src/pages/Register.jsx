@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import axios from 'axios';
+import Swal from 'sweetalert2';
 
 function Register() {
   const [nombre, setNombre] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [mensaje, setMensaje] = useState('');
 
   const handleRegister = async (e) => {
     e.preventDefault();
@@ -16,19 +16,38 @@ function Register() {
         email,
         password
       });
-
-      setMensaje('✅ Registro exitoso. Ya puedes iniciar sesión.');
+    
+      Swal.fire({
+        icon: 'success',
+        title: 'Registro exitoso',
+        text: 'Tu cuenta se ha creado correctamente.',
+        timer: 3000,
+        timerProgressBar: true,
+        showConfirmButton: false
+      }).then(() => {
+        window.location.href = '/login';
+      });
+    
       setNombre('');
       setEmail('');
       setPassword('');
     } catch (error) {
       console.error(error);
-      setMensaje('❌ Error al registrar. ¿Ya existe ese correo?');
+      Swal.fire({
+        icon: 'error',
+        title: 'Error al registrar',
+        text: error.response?.data?.mensaje || '¿Ya existe ese correo?',
+        confirmButtonText: 'Intentar de nuevo',
+        customClass: {
+          confirmButton: 'bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700'
+        }
+      });
     }
+    
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
+    <div className="min-h-screen flex items-start justify-center bg-gray-100 pt-16 px-4">
       <div className="bg-white p-6 rounded-lg shadow-md w-full max-w-md">
         <h2 className="text-2xl font-bold mb-4 text-center">Crear cuenta</h2>
         <form onSubmit={handleRegister} className="space-y-4">
@@ -63,7 +82,6 @@ function Register() {
             Registrarse
           </button>
         </form>
-        {mensaje && <p className="mt-4 text-center text-sm">{mensaje}</p>}
       </div>
     </div>
   );

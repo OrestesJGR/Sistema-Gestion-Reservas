@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
+import Swal from 'sweetalert2';
 
 function MisReservas() {
   const [reservas, setReservas] = useState([]);
@@ -25,25 +26,52 @@ function MisReservas() {
   }, []);
 
   const cancelarReserva = async (idReserva) => {
+    const confirmacion = await Swal.fire({
+      title: '¿Estás seguro?',
+      text: 'Esta acción cancelará tu reserva y no se podrá recuperar.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, cancelar',
+      cancelButtonText: 'Volver',
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+    });
+  
+    if (!confirmacion.isConfirmed) return;
+  
     try {
       await axios.delete(`http://localhost:5000/api/reservas/${idReserva}`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
       });
-
-      setMensaje('✅ Reserva cancelada correctamente');
+  
       setReservas(reservas.filter((reserva) => reserva._id !== idReserva));
+  
+      Swal.fire({
+        icon: 'success',
+        title: 'Cancelada',
+        text: 'Tu reserva ha sido cancelada con éxito.',
+        showConfirmButton: false,
+        timer: 3000
+      });
     } catch (error) {
       console.error('Error al cancelar reserva:', error);
-      setMensaje('❌ No se pudo cancelar la reserva.');
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'No se pudo cancelar la reserva.',
+        showConfirmButton: false,
+        timer: 3000
+      });
     }
   };
+  
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <h2 className="text-2xl font-bold text-center mb-6">Mis Reservas</h2>
-      {mensaje && <p className="text-center text-green-600 font-semibold mb-4">{mensaje}</p>}
+      {mensaje && <p className="text-center text-red-600 font-semibold mb-4">{mensaje}</p>}
       {reservas.length === 0 ? (
         <p className="text-center text-gray-600">Aún no tienes reservas registradas.</p>
       ) : (

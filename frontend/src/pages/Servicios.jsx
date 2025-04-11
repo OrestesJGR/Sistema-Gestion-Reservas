@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
+import Swal from 'sweetalert2';
 
 function Servicios() {
   const [servicios, setServicios] = useState([]);
-  const [mensaje, setMensaje] = useState('');
   const [fechasReserva, setFechasReserva] = useState({});
   const token = localStorage.getItem('token');
 
@@ -24,30 +24,44 @@ function Servicios() {
     setFechasReserva({ ...fechasReserva, [id]: valor });
   };
 
-  // Función para obtener la fecha actual en formato "YYYY-MM-DDTHH:MM"
   const obtenerFechaMinima = () => {
     const now = new Date();
-    now.setMinutes(now.getMinutes() - now.getTimezoneOffset()); // Corrige zona horaria
-    return now.toISOString().slice(0, 16); // Recorta para que encaje con datetime-local
+    now.setMinutes(Math.ceil(now.getMinutes() / 5) * 5); // Redondear a múltiplo de 5
+    now.setSeconds(0);
+    now.setMilliseconds(0);
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset()); // Corregir zona horaria
+    return now.toISOString().slice(0, 16);
   };
-
+  
 
   const reservarServicio = async (idServicio) => {
     const fechaSeleccionada = fechasReserva[idServicio];
-  
+
     if (!fechaSeleccionada) {
-      setMensaje('❌ Debes seleccionar una fecha y hora para reservar.');
+      Swal.fire({
+        icon: 'warning',
+        title: 'Fecha requerida',
+        text: 'Debes seleccionar una fecha y hora para reservar.',
+        showConfirmButton: false,
+        timer: 3000
+      });
       return;
     }
-  
+
     const fechaActual = new Date();
     const fechaIngresada = new Date(fechaSeleccionada);
-  
+
     if (fechaIngresada < fechaActual) {
-      setMensaje('❌ No puedes reservar en una fecha pasada.');
+      Swal.fire({
+        icon: 'error',
+        title: 'Fecha inválida',
+        text: 'No puedes reservar en una fecha pasada.',
+        showConfirmButton: false,
+        timer: 3000
+      });
       return;
     }
-  
+
     try {
       await axios.post(
         'http://localhost:5000/api/reservas',
@@ -61,19 +75,35 @@ function Servicios() {
           }
         }
       );
-  
-      setMensaje('✅ Reserva realizada correctamente');
+
+      Swal.fire({
+        icon: 'success',
+        title: 'Reserva realizada',
+        text: 'Tu reserva se ha registrado con éxito.',
+        showConfirmButton: false,
+        timer: 3000
+      });
+
+      // Opcional: Redirigir tras la reserva
+      setTimeout(() => {
+        window.location.href = '/mis-reservas';
+      }, 3000);
+
     } catch (error) {
       console.error('Error al reservar:', error);
-      setMensaje('❌ No se pudo realizar la reserva');
+      Swal.fire({
+        icon: 'error',
+        title: 'Error al reservar',
+        text: 'No se pudo completar la reserva.',
+        showConfirmButton: false,
+        timer: 3000
+      });
     }
   };
-  
 
   return (
     <div className="min-h-screen bg-gray-100 p-6">
       <h2 className="text-2xl font-bold mb-6 text-center">Servicios disponibles</h2>
-      {mensaje && <p className="text-center text-green-600 font-semibold mb-4">{mensaje}</p>}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
         {servicios.map((servicio) => (
           <div
@@ -89,10 +119,11 @@ function Servicios() {
               <>
                 <input
                   type="datetime-local"
+                  step="300"
                   className="mb-3 w-full border rounded px-3 py-2 text-sm"
                   value={fechasReserva[servicio._id] || ''}
                   onChange={(e) => manejarCambioFecha(servicio._id, e.target.value)}
-                  min={obtenerFechaMinima()} 
+                  min={obtenerFechaMinima()}
                 />
                 <button
                   onClick={() => reservarServicio(servicio._id)}
