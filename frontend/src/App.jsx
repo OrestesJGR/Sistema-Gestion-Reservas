@@ -7,6 +7,10 @@ import MisReservas from './pages/MisReservas';
 import Navbar from './components/Navbar';
 import AdminPanel from './pages/AdminPanel';
 import RutaProtegidaAdmin from './components/RutaProtegidaAdmin';
+import AdminServicios from './pages/AdminServicios';
+import AdminUsuarios from './pages/AdminUsuarios';
+
+
 
 
 
@@ -31,7 +35,22 @@ function App() {
               </RutaProtegidaAdmin>
             }
           />
-
+          <Route
+            path="/admin/servicios"
+            element={
+              <RutaProtegidaAdmin>
+                <AdminServicios />
+              </RutaProtegidaAdmin>
+            }
+          />
+          <Route
+            path="/admin/usuarios"
+            element={
+              <RutaProtegidaAdmin>
+                <AdminUsuarios />
+              </RutaProtegidaAdmin>
+            }
+          />
         </Routes>
       </div>
     </>

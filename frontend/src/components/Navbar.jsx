@@ -39,7 +39,11 @@ function Navbar() {
 
         {/* Solo para administradores */}
         {usuario?.rol === 'admin' && (
-          <li><Link to="/admin" className="hover:underline">Admin</Link></li>
+          <>
+            <li><Link to="/admin" className="hover:underline">Admin</Link></li>
+            <li><Link to="/admin/servicios" className="hover:underline">Servicios</Link></li>
+            <li><Link to="/admin/usuarios" className="hover:underline">Usuarios</Link></li>
+          </>
         )}
 
         {!token && (

@@ -1,25 +1,19 @@
-// controllers/usuarioController.js
-
 const Usuario = require('../models/Usuario');
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 
-
-// Registro de usuario
+// Registro
 const registrarUsuario = async (req, res) => {
   try {
     const { nombre, email, password } = req.body;
 
-    // Comprobamos si el email ya existe
     const existeUsuario = await Usuario.findOne({ email });
     if (existeUsuario) {
       return res.status(400).json({ mensaje: 'El email ya está registrado' });
     }
 
-    // Hasheamos la contraseña
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Creamos el usuario
     const nuevoUsuario = new Usuario({
       nombre,
       email,
@@ -29,15 +23,13 @@ const registrarUsuario = async (req, res) => {
     await nuevoUsuario.save();
 
     res.status(201).json({ mensaje: 'Usuario registrado correctamente' });
-
   } catch (error) {
     console.error(error);
     res.status(500).json({ mensaje: 'Error al registrar el usuario' });
   }
 };
 
-const jwt = require('jsonwebtoken');
-// Inicio de sesión
+// Login
 const loginUsuario = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -74,7 +66,62 @@ const loginUsuario = async (req, res) => {
   }
 };
 
+// Obtener todos los usuarios
+const obtenerTodosLosUsuarios = async (req, res) => {
+  try {
+    const usuarios = await Usuario.find().select('-password');
+    res.json(usuarios);
+  } catch (error) {
+    console.error('Error al obtener usuarios:', error);
+    res.status(500).json({ mensaje: 'Error al obtener usuarios' });
+  }
+};
+
+// Cambiar rol
+const cambiarRolUsuario = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { rol } = req.body;
+
+    if (!['usuario', 'moderador', 'admin'].includes(rol)) {
+      return res.status(400).json({ mensaje: 'Rol no válido' });
+    }
+
+    const usuario = await Usuario.findByIdAndUpdate(id, { rol }, { new: true });
+
+    if (!usuario) {
+      return res.status(404).json({ mensaje: 'Usuario no encontrado' });
+    }
+
+    res.json(usuario);
+  } catch (error) {
+    console.error('Error al cambiar el rol:', error);
+    res.status(500).json({ mensaje: 'Error al cambiar el rol del usuario' });
+  }
+};
+
+// Eliminar usuario
+const eliminarUsuario = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const usuario = await Usuario.findByIdAndDelete(id);
+
+    if (!usuario) {
+      return res.status(404).json({ mensaje: 'Usuario no encontrado' });
+    }
+
+    res.json({ mensaje: 'Usuario eliminado correctamente' });
+  } catch (error) {
+    console.error('Error al eliminar usuario:', error);
+    res.status(500).json({ mensaje: 'Error al eliminar el usuario' });
+  }
+};
+
 module.exports = {
   registrarUsuario,
-  loginUsuario
+  loginUsuario,
+  obtenerTodosLosUsuarios,
+  cambiarRolUsuario,
+  eliminarUsuario
 };
