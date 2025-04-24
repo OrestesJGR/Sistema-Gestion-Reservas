@@ -1,12 +1,34 @@
+
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import Swal from 'sweetalert2';
+import { Bar } from 'react-chartjs-2';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend
+} from 'chart.js';
+
+ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 function AdminPanel() {
   const [reservas, setReservas] = useState([]);
   const [filtro, setFiltro] = useState('');
   const [fechaFiltro, setFechaFiltro] = useState('');
   const [mensaje, setMensaje] = useState('');
+  const [estadisticas, setEstadisticas] = useState({
+    totalUsuarios: 0,
+    totalServicios: 0,
+    totalReservas: 0
+  });
+  const [datosGrafica, setDatosGrafica] = useState([]);
+  const [paginaActual, setPaginaActual] = useState(1);
+  const reservasPorPagina = 3;
+
   const token = localStorage.getItem('token');
 
   const obtenerTodasLasReservas = async () => {
@@ -21,9 +43,37 @@ function AdminPanel() {
     }
   };
 
+  const obtenerEstadisticas = async () => {
+    try {
+      const res = await axios.get('http://localhost:5000/api/admin/estadisticas', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setEstadisticas(res.data);
+    } catch (error) {
+      console.error('Error al obtener estadísticas:', error);
+    }
+  };
+
+  const obtenerDatosGrafica = async () => {
+    try {
+      const res = await axios.get('http://localhost:5000/api/admin/reservas-por-servicio', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setDatosGrafica(res.data);
+    } catch (error) {
+      console.error('Error al obtener datos de la gráfica:', error);
+    }
+  };
+
   useEffect(() => {
     obtenerTodasLasReservas();
+    obtenerEstadisticas();
+    obtenerDatosGrafica();
   }, []);
+
+  useEffect(() => {
+    setPaginaActual(1);
+  }, [filtro, fechaFiltro]);
 
   const eliminarReserva = async (id) => {
     const confirmacion = await Swal.fire({
@@ -102,9 +152,28 @@ function AdminPanel() {
     return coincideTexto && coincideFecha;
   });
 
+  const totalPaginas = Math.ceil(reservasFiltradas.length / reservasPorPagina);
+  const indiceInicio = (paginaActual - 1) * reservasPorPagina;
+  const reservasPaginadas = reservasFiltradas.slice(indiceInicio, indiceInicio + reservasPorPagina);
+
   return (
     <div className="min-h-screen bg-gray-100 p-6">
       <h2 className="text-2xl font-bold text-center mb-6">Panel de Administrador</h2>
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-5xl mx-auto mb-6">
+        <div className="bg-white shadow p-4 rounded text-center">
+          <h3 className="text-sm text-gray-500">Usuarios</h3>
+          <p className="text-2xl font-bold text-blue-600">{estadisticas.totalUsuarios}</p>
+        </div>
+        <div className="bg-white shadow p-4 rounded text-center">
+          <h3 className="text-sm text-gray-500">Servicios</h3>
+          <p className="text-2xl font-bold text-green-600">{estadisticas.totalServicios}</p>
+        </div>
+        <div className="bg-white shadow p-4 rounded text-center">
+          <h3 className="text-sm text-gray-500">Reservas</h3>
+          <p className="text-2xl font-bold text-purple-600">{estadisticas.totalReservas}</p>
+        </div>
+      </div>
 
       <div className="max-w-5xl mx-auto mb-6 flex flex-col md:flex-row justify-between gap-4">
         <input
@@ -138,7 +207,7 @@ function AdminPanel() {
       {reservasFiltradas.length === 0 ? (
         <p className="text-center text-gray-600">No se encontraron reservas.</p>
       ) : (
-        <div className="max-w-5xl mx-auto overflow-x-auto">
+        <div className="max-w-5xl mx-auto overflow-x-auto mb-6">
           <table className="w-full bg-white shadow rounded text-center">
             <thead className="bg-blue-600 text-white">
               <tr>
@@ -150,7 +219,7 @@ function AdminPanel() {
               </tr>
             </thead>
             <tbody>
-              {reservasFiltradas.map((reserva) => (
+              {reservasPaginadas.map((reserva) => (
                 <tr key={reserva._id} className="border-b hover:bg-gray-50">
                   <td className="p-2">{reserva.usuario?.nombre || 'Sin nombre'}</td>
                   <td className="p-2">{reserva.usuario?.email || 'Sin correo'}</td>
@@ -168,6 +237,57 @@ function AdminPanel() {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {totalPaginas > 1 && (
+        <div className="flex justify-center items-center mt-4 gap-4">
+          <button
+            onClick={() => setPaginaActual((prev) => Math.max(prev - 1, 1))}
+            disabled={paginaActual === 1}
+            className="px-4 py-2 bg-gray-300 text-sm rounded hover:bg-gray-400 disabled:opacity-50"
+          >
+            ⬅ Anterior
+          </button>
+          <span className="text-sm font-medium">Página {paginaActual} de {totalPaginas}</span>
+          <button
+            onClick={() => setPaginaActual((prev) => Math.min(prev + 1, totalPaginas))}
+            disabled={paginaActual === totalPaginas}
+            className="px-4 py-2 bg-gray-300 text-sm rounded hover:bg-gray-400 disabled:opacity-50"
+          >
+            Siguiente ➡
+          </button>
+        </div>
+      )}
+
+      {datosGrafica.length > 0 && (
+        <div className="max-w-5xl mx-auto bg-white p-4 rounded shadow mt-10">
+          <h3 className="text-lg font-semibold text-center mb-4 text-blue-700">Reservas por servicio</h3>
+          <Bar
+            data={{
+              labels: datosGrafica.map((d) => d.servicio),
+              datasets: [
+                {
+                  label: 'Total de reservas',
+                  data: datosGrafica.map((d) => d.total),
+                  backgroundColor: 'rgba(59, 130, 246, 0.6)'
+                }
+              ]
+            }}
+            options={{
+              responsive: true,
+              plugins: {
+                legend: { display: false },
+                title: { display: false }
+              },
+              scales: {
+                y: {
+                  beginAtZero: true,
+                  ticks: { stepSize: 1 }
+                }
+              }
+            }}
+          />
         </div>
       )}
     </div>

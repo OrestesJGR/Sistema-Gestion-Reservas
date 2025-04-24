@@ -22,7 +22,7 @@ app.use('/api', require('./routes/index'));
 app.use('/api/usuarios', require('./routes/usuarios'));
 app.use('/api/servicios', require('./routes/servicios'));
 app.use('/api/reservas', require('./routes/reservas'));
-
+app.use('/api/admin', require('./routes/admin')); // ✅ Nueva ruta para estadísticas
 
 // Inicio del servidor
 app.listen(PORT, () => {

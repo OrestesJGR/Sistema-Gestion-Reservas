@@ -4,6 +4,10 @@ import Swal from 'sweetalert2';
 
 function AdminUsuarios() {
   const [usuarios, setUsuarios] = useState([]);
+  const [busqueda, setBusqueda] = useState('');
+  const [paginaActual, setPaginaActual] = useState(1);
+  const usuariosPorPagina = 3;
+
   const token = localStorage.getItem('token');
 
   const obtenerUsuarios = async () => {
@@ -40,7 +44,7 @@ function AdminUsuarios() {
       Swal.fire({
         icon: 'success',
         title: 'Rol actualizado',
-        text: 'El rol del usuario ha sido modificado.',
+        text: 'El rol del usuario se ha modificado.',
         showConfirmButton: false,
         timer: 3000
       });
@@ -98,12 +102,40 @@ function AdminUsuarios() {
     }
   };
 
+  // Filtro + paginación
+  const usuariosFiltrados = usuarios.filter((u) =>
+    `${u.nombre} ${u.email} ${u.rol}`.toLowerCase().includes(busqueda.toLowerCase())
+  );
+
+  const totalPaginas = Math.ceil(usuariosFiltrados.length / usuariosPorPagina);
+  const indiceInicio = (paginaActual - 1) * usuariosPorPagina;
+  const usuariosPaginados = usuariosFiltrados.slice(indiceInicio, indiceInicio + usuariosPorPagina);
+
+  const cambiarPagina = (nuevaPagina) => {
+    if (nuevaPagina >= 1 && nuevaPagina <= totalPaginas) {
+      setPaginaActual(nuevaPagina);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 p-6">
       <h2 className="text-2xl font-bold text-center mb-6">Gestión de Usuarios</h2>
 
-      {usuarios.length === 0 ? (
-        <p className="text-center text-gray-600">No hay usuarios registrados.</p>
+      <div className="max-w-5xl mx-auto mb-4">
+        <input
+          type="text"
+          placeholder="Buscar por nombre, email o rol"
+          value={busqueda}
+          onChange={(e) => {
+            setBusqueda(e.target.value);
+            setPaginaActual(1); // reinicia a página 1 al buscar
+          }}
+          className="w-full px-4 py-2 border rounded shadow"
+        />
+      </div>
+
+      {usuariosPaginados.length === 0 ? (
+        <p className="text-center text-gray-600">No se encontraron usuarios.</p>
       ) : (
         <div className="overflow-x-auto max-w-5xl mx-auto">
           <table className="w-full bg-white shadow rounded text-sm">
@@ -116,7 +148,7 @@ function AdminUsuarios() {
               </tr>
             </thead>
             <tbody>
-              {usuarios.map((usuario) => (
+              {usuariosPaginados.map((usuario) => (
                 <tr key={usuario._id} className="border-b hover:bg-gray-50">
                   <td className="p-2">{usuario.nombre}</td>
                   <td className="p-2">{usuario.email}</td>
@@ -143,6 +175,25 @@ function AdminUsuarios() {
               ))}
             </tbody>
           </table>
+
+          {/* Controles de paginación */}
+          <div className="flex justify-between items-center mt-4 text-sm">
+            <button
+              onClick={() => cambiarPagina(paginaActual - 1)}
+              disabled={paginaActual === 1}
+              className="bg-gray-300 text-gray-800 px-3 py-1 rounded hover:bg-gray-400 disabled:opacity-50"
+            >
+              Anterior
+            </button>
+            <span>Página {paginaActual} de {totalPaginas}</span>
+            <button
+              onClick={() => cambiarPagina(paginaActual + 1)}
+              disabled={paginaActual === totalPaginas}
+              className="bg-gray-300 text-gray-800 px-3 py-1 rounded hover:bg-gray-400 disabled:opacity-50"
+            >
+              Siguiente
+            </button>
+          </div>
         </div>
       )}
     </div>
