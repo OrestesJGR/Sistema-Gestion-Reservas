@@ -24,7 +24,7 @@ function Navbar() {
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('usuario');
-    setUsuario(null); // ← forzamos actualización inmediata
+    setUsuario(null);
     navigate('/login');
   };
 
@@ -36,12 +36,13 @@ function Navbar() {
         <li><Link to="/servicios" className="hover:underline">Servicios</Link></li>
 
         {token && <li><Link to="/mis-reservas" className="hover:underline">Mis reservas</Link></li>}
+        {token && <li><Link to="/perfil" className="hover:underline">Mi perfil</Link></li>} {/* 👈 Añadido */}
 
         {/* Solo para administradores */}
         {usuario?.rol === 'admin' && (
           <>
             <li><Link to="/admin" className="hover:underline">Admin</Link></li>
-            <li><Link to="/admin/servicios" className="hover:underline">Servicios</Link></li>
+            <li><Link to="/admin/servicios" className="hover:underline">Gestión servicios</Link></li>
             <li><Link to="/admin/usuarios" className="hover:underline">Usuarios</Link></li>
           </>
         )}
@@ -63,6 +64,9 @@ function Navbar() {
             </button>
           </li>
         )}
+
+        <li><Link to="/contacto" className="hover:underline">Contacto</Link></li>
+
       </ul>
     </nav>
   );

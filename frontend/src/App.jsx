@@ -9,8 +9,9 @@ import AdminPanel from './pages/AdminPanel';
 import RutaProtegidaAdmin from './components/RutaProtegidaAdmin';
 import AdminServicios from './pages/AdminServicios';
 import AdminUsuarios from './pages/AdminUsuarios';
-
-
+import Perfil from './pages/Perfil';
+import Home from './pages/Home';
+import Contacto from './pages/Contacto';
 
 
 
@@ -21,12 +22,13 @@ function App() {
       <div className="p-6">
         <h1 className="text-center text-2xl font-bold my-6">Sistema de Gestión de Reservas</h1>
         <Routes>
-          <Route path="/" element={<p className="text-center">Bienvenido a la app de reservas</p>} />
+          <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/servicios" element={<Servicios />} />
           <Route path="/mis-reservas" element={<MisReservas />} />
-          <Route path="/admin" element={<AdminPanel />} />
+          <Route path="/perfil" element={<Perfil />} /> {/* 👈 NUEVA RUTA */}
+
           <Route
             path="/admin"
             element={
@@ -51,6 +53,7 @@ function App() {
               </RutaProtegidaAdmin>
             }
           />
+          <Route path="/contacto" element={<Contacto />} />
         </Routes>
       </div>
     </>
