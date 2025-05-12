@@ -5,6 +5,7 @@ import Register from './pages/Register';
 import Servicios from './pages/Servicios';
 import MisReservas from './pages/MisReservas';
 import Navbar from './components/Navbar';
+import Footer from './components/Footer'; // ✅ Nuevo Footer
 import AdminPanel from './pages/AdminPanel';
 import RutaProtegidaAdmin from './components/RutaProtegidaAdmin';
 import AdminServicios from './pages/AdminServicios';
@@ -12,7 +13,7 @@ import AdminUsuarios from './pages/AdminUsuarios';
 import Perfil from './pages/Perfil';
 import Home from './pages/Home';
 import Contacto from './pages/Contacto';
-
+import AdminContacto from './pages/AdminContacto';
 
 
 function App() {
@@ -20,14 +21,14 @@ function App() {
     <>
       <Navbar />
       <div className="p-6">
-        <h1 className="text-center text-2xl font-bold my-6">Sistema de Gestión de Reservas</h1>
+        {/* ✅ Rutas de la aplicación */}
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/servicios" element={<Servicios />} />
           <Route path="/mis-reservas" element={<MisReservas />} />
-          <Route path="/perfil" element={<Perfil />} /> {/* 👈 NUEVA RUTA */}
+          <Route path="/perfil" element={<Perfil />} />
 
           <Route
             path="/admin"
@@ -53,9 +54,23 @@ function App() {
               </RutaProtegidaAdmin>
             }
           />
+
           <Route path="/contacto" element={<Contacto />} />
+
+          <Route
+            path="/admin/contacto"
+            element={
+              <RutaProtegidaAdmin>
+                <AdminContacto />
+              </RutaProtegidaAdmin>
+            }
+          />
+
         </Routes>
       </div>
+
+      {/* ✅ Footer presente en todas las vistas */}
+      <Footer />
     </>
   );
 }

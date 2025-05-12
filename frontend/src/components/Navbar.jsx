@@ -41,9 +41,10 @@ function Navbar() {
         {/* Solo para administradores */}
         {usuario?.rol === 'admin' && (
           <>
-            <li><Link to="/admin" className="hover:underline">Admin</Link></li>
+            <li><Link to="/admin" className="hover:underline">Panel Administrador</Link></li>
             <li><Link to="/admin/servicios" className="hover:underline">Gestión servicios</Link></li>
             <li><Link to="/admin/usuarios" className="hover:underline">Usuarios</Link></li>
+            <li><Link to="/admin/contacto" className="hover:underline">Mensajes</Link></li>
           </>
         )}
 
@@ -65,7 +66,7 @@ function Navbar() {
           </li>
         )}
 
-        <li><Link to="/contacto" className="hover:underline">Contacto</Link></li>
+        
 
       </ul>
     </nav>
