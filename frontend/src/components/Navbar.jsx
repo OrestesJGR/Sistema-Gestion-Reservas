@@ -30,7 +30,7 @@ function Navbar() {
 
   return (
     <nav className="bg-blue-600 text-white px-6 py-4 flex items-center justify-between shadow-md">
-      <h1 className="text-lg font-bold">Gestor de Reservas</h1>
+      <h1 className="text-lg font-bold">NoteBook</h1>
       <ul className="flex gap-4 items-center text-sm">
         <li><Link to="/" className="hover:underline">Inicio</Link></li>
         <li><Link to="/servicios" className="hover:underline">Servicios</Link></li>

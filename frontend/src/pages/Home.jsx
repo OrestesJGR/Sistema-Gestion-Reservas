@@ -29,7 +29,7 @@ function Home() {
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="text-center">
         <h1 className="text-3xl font-bold text-blue-700 mb-4">
-          {usuario ? `Bienvenido, ${usuario.nombre} 👋` : 'Bienvenido a la app de reservas'}
+          {usuario ? `Bienvenido, ${usuario.nombre} 👋` : 'Bienvenido a NoteBook!!'}
         </h1>
         <p className="text-gray-600">
           {usuario ? 'Elige un servicio del menú superior para reservar tu cita.' : 'Por favor inicia sesión para comenzar.'}
