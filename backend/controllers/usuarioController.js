@@ -2,10 +2,23 @@ const Usuario = require('../models/Usuario');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
+// Validación de contraseña segura
+const esContrasenaSegura = (password) => {
+  const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+  return regex.test(password);
+};
+
 // Registro
 const registrarUsuario = async (req, res) => {
   try {
     const { nombre, email, password } = req.body;
+
+    // Verificar contraseña segura
+    if (!esContrasenaSegura(password)) {
+      return res.status(400).json({
+        mensaje: 'La contraseña debe tener al menos 8 caracteres, incluyendo mayúsculas, minúsculas, números y un carácter especial.'
+      });
+    }
 
     const existeUsuario = await Usuario.findOne({ email });
     if (existeUsuario) {

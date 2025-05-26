@@ -10,7 +10,7 @@ const crearReserva = async (req, res) => {
     }
 
     const nueva = new Reserva({
-      usuario: req.usuario.id, // viene del token verificado
+      usuario: req.usuario.id,
       servicio,
       fecha,
       observaciones
@@ -46,8 +46,8 @@ const obtenerReservasUsuario = async (req, res) => {
 const obtenerTodasLasReservas = async (req, res) => {
   try {
     const reservas = await Reserva.find()
-      .populate('usuario', 'nombre email') // info del usuario que reservó
-      .populate('servicio', 'nombre descripcion') // info del servicio reservado
+      .populate('usuario', 'nombre email')
+      .populate('servicio', 'nombre descripcion')
       .sort({ fecha: -1 });
 
     res.json(reservas);
@@ -57,6 +57,47 @@ const obtenerTodasLasReservas = async (req, res) => {
   }
 };
 
+// Obtener horarios disponibles por fecha y servicio
+const obtenerHorariosDisponibles = async (req, res) => {
+  try {
+    const { fecha, servicio } = req.query;
+
+    if (!fecha || !servicio) {
+      return res.status(400).json({ mensaje: 'Faltan parámetros: fecha o servicio' });
+    }
+
+    // Generar franjas por defecto
+    const generarFranjas = (inicio, fin) => {
+      const franjas = [];
+      const actual = new Date(`${fecha}T${inicio}:00`);
+      const final = new Date(`${fecha}T${fin}:00`);
+
+      while (actual < final) {
+        franjas.push(new Date(actual).toISOString());
+        actual.setMinutes(actual.getMinutes() + 30);
+      }
+
+      return franjas;
+    };
+
+    const franjasManana = generarFranjas('09:00', '14:00');
+    const franjasTarde = generarFranjas('18:00', '21:00');
+    const todasLasFranjas = [...franjasManana, ...franjasTarde];
+
+    const reservas = await Reserva.find({
+      servicio,
+      fecha: { $gte: new Date(`${fecha}T00:00:00`), $lte: new Date(`${fecha}T23:59:59`) }
+    });
+
+    const ocupadas = reservas.map(r => new Date(r.fecha).toISOString());
+    const disponibles = todasLasFranjas.filter(f => !ocupadas.includes(f));
+
+    res.json(disponibles);
+  } catch (error) {
+    console.error('❌ Error al obtener horarios disponibles:', error);
+    res.status(500).json({ mensaje: 'Error al obtener horarios' });
+  }
+};
 
 // Eliminar (cancelar) una reserva
 const eliminarReserva = async (req, res) => {
@@ -67,7 +108,6 @@ const eliminarReserva = async (req, res) => {
       return res.status(404).json({ mensaje: 'Reserva no encontrada' });
     }
 
-    // Verifica que la reserva pertenezca al usuario
     if (reserva.usuario.toString() !== req.usuario.id) {
       return res.status(403).json({ mensaje: 'No tienes permiso para cancelar esta reserva' });
     }
@@ -85,5 +125,6 @@ module.exports = {
   crearReserva,
   obtenerReservasUsuario,
   eliminarReserva,
-  obtenerTodasLasReservas 
+  obtenerTodasLasReservas,
+  obtenerHorariosDisponibles
 };

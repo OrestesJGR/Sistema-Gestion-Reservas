@@ -5,11 +5,12 @@ const {
   crearReserva,
   obtenerReservasUsuario,
   eliminarReserva,
-  obtenerTodasLasReservas // 👈 Ruta de administrador
+  obtenerTodasLasReservas,
+  obtenerHorariosDisponibles // ✅ Nueva función importada
 } = require('../controllers/reservaController');
 
 const verificarToken = require('../middleware/auth');
-const verificarAdmin = require('../middleware/verificarAdmin'); // 👈 Nuevo middleware
+const verificarAdmin = require('../middleware/verificarAdmin');
 
 // Crear una nueva reserva (requiere estar autenticado)
 router.post('/', verificarToken, crearReserva);
@@ -22,5 +23,8 @@ router.delete('/:id', verificarToken, eliminarReserva);
 
 // Obtener TODAS las reservas (solo admin)
 router.get('/admin/todas-las-reservas', verificarToken, verificarAdmin, obtenerTodasLasReservas);
+
+// ✅ Obtener horarios disponibles por fecha y servicio
+router.get('/horarios-disponibles', verificarToken, obtenerHorariosDisponibles);
 
 module.exports = router;

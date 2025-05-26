@@ -89,7 +89,7 @@ function Footer() {
       </div>
 
       <div className="text-center mt-6 text-sm text-gray-400">
-        &copy; {new Date().getFullYear()} Gestor de Reservas. Todos los derechos reservados.
+        &copy; {new Date().getFullYear()} NoteBook. Todos los derechos reservados.
       </div>
     </footer>
   );

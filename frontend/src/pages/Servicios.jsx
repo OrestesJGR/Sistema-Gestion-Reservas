@@ -4,7 +4,9 @@ import Swal from 'sweetalert2';
 
 function Servicios() {
   const [servicios, setServicios] = useState([]);
-  const [fechasReserva, setFechasReserva] = useState({});
+  const [fechas, setFechas] = useState({});
+  const [horarios, setHorarios] = useState({});
+  const [horarioSeleccionado, setHorarioSeleccionado] = useState({});
   const token = localStorage.getItem('token');
 
   useEffect(() => {
@@ -20,54 +22,63 @@ function Servicios() {
     obtenerServicios();
   }, []);
 
-  const manejarCambioFecha = (id, valor) => {
-    setFechasReserva({ ...fechasReserva, [id]: valor });
-  };
+  const manejarCambioFecha = async (idServicio, fecha) => {
+    setFechas((prev) => ({ ...prev, [idServicio]: fecha }));
+    setHorarioSeleccionado((prev) => ({ ...prev, [idServicio]: '' }));
 
-  const obtenerFechaMinima = () => {
-    const now = new Date();
-    now.setMinutes(Math.ceil(now.getMinutes() / 5) * 5); // Redondear a múltiplo de 5
-    now.setSeconds(0);
-    now.setMilliseconds(0);
-    now.setMinutes(now.getMinutes() - now.getTimezoneOffset()); // Corregir zona horaria
-    return now.toISOString().slice(0, 16);
+    if (!fecha) return;
+
+    try {
+      const res = await axios.get(
+        `http://localhost:5000/api/reservas/horarios-disponibles`,
+        {
+          params: { fecha, servicio: idServicio },
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
+      setHorarios((prev) => ({ ...prev, [idServicio]: res.data }));
+    } catch (error) {
+      console.error('Error al obtener horarios disponibles:', error);
+      setHorarios((prev) => ({ ...prev, [idServicio]: [] }));
+    }
   };
-  
 
   const reservarServicio = async (idServicio) => {
-    const fechaSeleccionada = fechasReserva[idServicio];
+    const fecha = fechas[idServicio];
+    const hora = horarioSeleccionado[idServicio];
 
-    if (!fechaSeleccionada) {
+    if (!fecha || !hora) {
       Swal.fire({
         icon: 'warning',
-        title: 'Fecha requerida',
-        text: 'Debes seleccionar una fecha y hora para reservar.',
+        title: 'Faltan datos',
+        text: 'Selecciona una fecha y un horario disponible.',
         showConfirmButton: false,
         timer: 3000
       });
       return;
     }
 
-    const fechaActual = new Date();
-    const fechaIngresada = new Date(fechaSeleccionada);
+    const fechaCompleta = new Date(hora);
+    const ahora = new Date();
 
-    if (fechaIngresada < fechaActual) {
+    if (fechaCompleta <= ahora) {
       Swal.fire({
         icon: 'error',
-        title: 'Fecha inválida',
-        text: 'No puedes reservar en una fecha pasada.',
+        title: 'Horario inválido',
+        text: 'No puedes reservar una franja horaria pasada.',
         showConfirmButton: false,
         timer: 3000
       });
       return;
     }
+
 
     try {
       await axios.post(
         'http://localhost:5000/api/reservas',
         {
           servicio: idServicio,
-          fecha: fechaSeleccionada
+          fecha: fechaCompleta
         },
         {
           headers: {
@@ -84,11 +95,9 @@ function Servicios() {
         timer: 3000
       });
 
-      // Opcional: Redirigir tras la reserva
       setTimeout(() => {
         window.location.href = '/mis-reservas';
       }, 3000);
-
     } catch (error) {
       console.error('Error al reservar:', error);
       Swal.fire({
@@ -118,13 +127,38 @@ function Servicios() {
             {token ? (
               <>
                 <input
-                  type="datetime-local"
-                  step="300"
+                  type="date"
                   className="mb-3 w-full border rounded px-3 py-2 text-sm"
-                  value={fechasReserva[servicio._id] || ''}
+                  value={fechas[servicio._id] || ''}
                   onChange={(e) => manejarCambioFecha(servicio._id, e.target.value)}
-                  min={obtenerFechaMinima()}
                 />
+
+                {horarios[servicio._id] && (
+                  <select
+                    className="mb-3 w-full border rounded px-3 py-2 text-sm"
+                    value={horarioSeleccionado[servicio._id] || ''}
+                    onChange={(e) =>
+                      setHorarioSeleccionado((prev) => ({
+                        ...prev,
+                        [servicio._id]: e.target.value
+                      }))
+                    }
+                  >
+                    <option value="">Selecciona una hora</option>
+                    {horarios[servicio._id].map((h) => {
+                      const horaLocal = new Date(h).toLocaleTimeString([], {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      });
+                      return (
+                        <option key={h} value={h}>
+                          {horaLocal}
+                        </option>
+                      );
+                    })}
+                  </select>
+                )}
+
                 <button
                   onClick={() => reservarServicio(servicio._id)}
                   className="mt-auto bg-green-600 text-white py-2 rounded hover:bg-green-700 transition"
@@ -133,7 +167,9 @@ function Servicios() {
                 </button>
               </>
             ) : (
-              <p className="text-sm text-gray-500 text-center mt-4">Inicia sesión para reservar</p>
+              <p className="text-sm text-gray-500 text-center mt-4">
+                Inicia sesión para reservar
+              </p>
             )}
           </div>
         ))}

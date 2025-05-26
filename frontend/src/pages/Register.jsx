@@ -6,6 +6,27 @@ function Register() {
   const [nombre, setNombre] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [passwordStrength, setPasswordStrength] = useState(0);
+  const [passwordFeedback, setPasswordFeedback] = useState('');
+
+  const evaluarFortalezaPassword = (password) => {
+    let puntuacion = 0;
+    if (password.length >= 8) puntuacion++;
+    if (/[A-Z]/.test(password)) puntuacion++;
+    if (/[a-z]/.test(password)) puntuacion++;
+    if (/\d/.test(password)) puntuacion++;
+    if (/[@$!%*?&]/.test(password)) puntuacion++;
+
+    setPasswordStrength(puntuacion);
+
+    if (puntuacion <= 2) {
+      setPasswordFeedback('Débil');
+    } else if (puntuacion === 3 || puntuacion === 4) {
+      setPasswordFeedback('Media');
+    } else {
+      setPasswordFeedback('Fuerte');
+    }
+  };
 
   const handleRegister = async (e) => {
     e.preventDefault();
@@ -16,7 +37,7 @@ function Register() {
         email,
         password
       });
-    
+
       Swal.fire({
         icon: 'success',
         title: 'Registro exitoso',
@@ -27,10 +48,12 @@ function Register() {
       }).then(() => {
         window.location.href = '/login';
       });
-    
+
       setNombre('');
       setEmail('');
       setPassword('');
+      setPasswordStrength(0);
+      setPasswordFeedback('');
     } catch (error) {
       console.error(error);
       Swal.fire({
@@ -43,7 +66,6 @@ function Register() {
         }
       });
     }
-    
   };
 
   return (
@@ -71,10 +93,30 @@ function Register() {
             type="password"
             placeholder="Contraseña"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={(e) => {
+              setPassword(e.target.value);
+              evaluarFortalezaPassword(e.target.value);
+            }}
             className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring focus:ring-blue-200"
             required
           />
+
+          {/* Barra de seguridad de contraseña */}
+          <div className="w-full bg-gray-200 rounded h-2">
+            <div
+              className={`h-full rounded transition-all duration-300 ${
+                passwordStrength <= 2
+                  ? 'bg-red-500 w-1/4'
+                  : passwordStrength === 3 || passwordStrength === 4
+                  ? 'bg-yellow-400 w-3/4'
+                  : 'bg-green-500 w-full'
+              }`}
+            ></div>
+          </div>
+          <p className="text-sm font-medium text-gray-600">
+            Seguridad: {passwordFeedback}
+          </p>
+
           <button
             type="submit"
             className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition"
