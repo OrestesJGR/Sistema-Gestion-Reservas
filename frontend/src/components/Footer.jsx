@@ -1,24 +1,35 @@
+// Importa useState para manejar el estado local del formulario
 import { useState } from 'react';
+
+// Importa Axios para hacer peticiones HTTP
 import axios from 'axios';
+
+// Importa SweetAlert2 para mostrar mensajes emergentes con estilo
 import Swal from 'sweetalert2';
 
+// Componente funcional Footer que incluye información de la aplicación y un formulario de contacto
 function Footer() {
+  // Estado local que guarda los datos del formulario de contacto
   const [form, setForm] = useState({
     nombre: '',
     email: '',
     mensaje: ''
   });
 
+  // Manejador del cambio en los inputs: actualiza el estado según el campo modificado
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+  // Manejador del envío del formulario
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    e.preventDefault(); // Previene el comportamiento por defecto del formulario
 
     try {
+      // Envía el contenido del formulario a la API de contacto
       await axios.post('http://localhost:5000/api/contacto', form);
 
+      // Muestra una notificación de éxito al usuario
       Swal.fire({
         icon: 'success',
         title: 'Mensaje enviado',
@@ -27,8 +38,10 @@ function Footer() {
         showConfirmButton: false
       });
 
+      // Limpia el formulario tras el envío
       setForm({ nombre: '', email: '', mensaje: '' });
     } catch (error) {
+      // Manejo de errores si la petición falla
       console.error('Error al enviar mensaje:', error);
       Swal.fire({
         icon: 'error',
@@ -38,9 +51,11 @@ function Footer() {
     }
   };
 
+  // Renderizado del componente Footer
   return (
     <footer className="bg-blue-900 text-white py-8 px-6 mt-12">
       <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-8">
+        {/* Sección de información general */}
         <div>
           <h3 className="text-xl font-semibold mb-2">Sobre nosotros</h3>
           <p className="text-sm text-gray-300">
@@ -48,6 +63,7 @@ function Footer() {
           </p>
         </div>
 
+        {/* Formulario de contacto */}
         <div>
           <h3 className="text-xl font-semibold mb-4">Contacto</h3>
           <form onSubmit={handleSubmit} className="space-y-3">
@@ -88,6 +104,7 @@ function Footer() {
         </div>
       </div>
 
+      {/* Pie de página final con derechos reservados */}
       <div className="text-center mt-6 text-sm text-gray-400">
         &copy; {new Date().getFullYear()} NoteBook. Todos los derechos reservados.
       </div>
@@ -95,4 +112,5 @@ function Footer() {
   );
 }
 
+// Exporta el componente Footer para usarlo en otras partes de la aplicación
 export default Footer;

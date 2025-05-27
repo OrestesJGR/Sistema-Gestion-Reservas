@@ -1,15 +1,25 @@
+// Importamos hooks y librerías necesarias
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import Swal from 'sweetalert2';
 
 function AdminUsuarios() {
+  // Estado con todos los usuarios del sistema
   const [usuarios, setUsuarios] = useState([]);
+
+  // Término de búsqueda para el filtro
   const [busqueda, setBusqueda] = useState('');
+
+  // Página actual para la paginación
   const [paginaActual, setPaginaActual] = useState(1);
+
+  // Número de usuarios que se muestran por página
   const usuariosPorPagina = 3;
 
+  // Token de autenticación
   const token = localStorage.getItem('token');
 
+  // Obtener todos los usuarios desde la API
   const obtenerUsuarios = async () => {
     try {
       const res = await axios.get('http://localhost:5000/api/usuarios', {
@@ -23,10 +33,12 @@ function AdminUsuarios() {
     }
   };
 
+  // Llamada inicial para cargar los usuarios cuando se monta el componente
   useEffect(() => {
     obtenerUsuarios();
   }, []);
 
+  // Cambia el rol de un usuario específico
   const cambiarRol = async (id, nuevoRol) => {
     try {
       await axios.put(
@@ -39,6 +51,7 @@ function AdminUsuarios() {
         }
       );
 
+      // Actualiza el usuario modificado en la lista
       setUsuarios(usuarios.map(u => (u._id === id ? { ...u, rol: nuevoRol } : u)));
 
       Swal.fire({
@@ -60,6 +73,7 @@ function AdminUsuarios() {
     }
   };
 
+  // Elimina un usuario tras confirmación
   const eliminarUsuario = async (id) => {
     const confirmacion = await Swal.fire({
       title: '¿Eliminar usuario?',
@@ -81,6 +95,7 @@ function AdminUsuarios() {
         }
       });
 
+      // Elimina el usuario de la lista local
       setUsuarios(usuarios.filter(u => u._id !== id));
 
       Swal.fire({
@@ -102,15 +117,17 @@ function AdminUsuarios() {
     }
   };
 
-  // Filtro + paginación
+  // Filtro de búsqueda que incluye nombre, email y rol
   const usuariosFiltrados = usuarios.filter((u) =>
     `${u.nombre} ${u.email} ${u.rol}`.toLowerCase().includes(busqueda.toLowerCase())
   );
 
+  // Cálculo de paginación
   const totalPaginas = Math.ceil(usuariosFiltrados.length / usuariosPorPagina);
   const indiceInicio = (paginaActual - 1) * usuariosPorPagina;
   const usuariosPaginados = usuariosFiltrados.slice(indiceInicio, indiceInicio + usuariosPorPagina);
 
+  // Cambia la página si es válida
   const cambiarPagina = (nuevaPagina) => {
     if (nuevaPagina >= 1 && nuevaPagina <= totalPaginas) {
       setPaginaActual(nuevaPagina);
@@ -119,8 +136,10 @@ function AdminUsuarios() {
 
   return (
     <div className="min-h-screen bg-gray-100 p-6">
+      {/* Título principal */}
       <h2 className="text-2xl font-bold text-center mb-6">Gestión de Usuarios</h2>
 
+      {/* Barra de búsqueda */}
       <div className="max-w-5xl mx-auto mb-4">
         <input
           type="text"
@@ -134,6 +153,7 @@ function AdminUsuarios() {
         />
       </div>
 
+      {/* Tabla de usuarios */}
       {usuariosPaginados.length === 0 ? (
         <p className="text-center text-gray-600">No se encontraron usuarios.</p>
       ) : (
@@ -153,6 +173,7 @@ function AdminUsuarios() {
                   <td className="p-2">{usuario.nombre}</td>
                   <td className="p-2">{usuario.email}</td>
                   <td className="p-2 text-center">
+                    {/* Menú desplegable para cambiar el rol del usuario */}
                     <select
                       value={usuario.rol}
                       onChange={(e) => cambiarRol(usuario._id, e.target.value)}
@@ -164,6 +185,7 @@ function AdminUsuarios() {
                     </select>
                   </td>
                   <td className="p-2 text-center">
+                    {/* Botón de eliminación */}
                     <button
                       onClick={() => eliminarUsuario(usuario._id)}
                       className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700"

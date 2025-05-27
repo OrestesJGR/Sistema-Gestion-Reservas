@@ -1,14 +1,25 @@
+// Importación de hooks y librerías necesarias
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import Swal from 'sweetalert2';
 
 function AdminServicios() {
+  // Estado para la lista de servicios obtenidos del backend
   const [servicios, setServicios] = useState([]);
+
+  // Estado para el formulario (crear o editar un servicio)
   const [nuevo, setNuevo] = useState({ nombre: '', descripcion: '' });
-  const [editando, setEditando] = useState(null); // Servicio en edición
+
+  // Estado que guarda el servicio que se está editando (null si se está creando uno nuevo)
+  const [editando, setEditando] = useState(null);
+
+  // Estado para mostrar u ocultar el modal de creación/edición
   const [modalVisible, setModalVisible] = useState(false);
+
+  // Token de autenticación obtenido del almacenamiento local
   const token = localStorage.getItem('token');
 
+  // Función para obtener los servicios desde la API
   const obtenerServicios = async () => {
     try {
       const res = await axios.get('http://localhost:5000/api/servicios');
@@ -18,25 +29,30 @@ function AdminServicios() {
     }
   };
 
+  // Al montar el componente, se obtienen los servicios
   useEffect(() => {
     obtenerServicios();
   }, []);
 
+  // Abre el modal para crear un nuevo servicio
   const abrirModalCrear = () => {
     setNuevo({ nombre: '', descripcion: '' });
     setEditando(null);
     setModalVisible(true);
   };
 
+  // Abre el modal y precarga los datos del servicio a editar
   const abrirModalEditar = (servicio) => {
     setNuevo({ nombre: servicio.nombre, descripcion: servicio.descripcion });
     setEditando(servicio);
     setModalVisible(true);
   };
 
+  // Guarda o actualiza un servicio según el contexto (crear o editar)
   const guardarServicio = async (e) => {
     e.preventDefault();
 
+    // Validación básica de campos vacíos
     if (!nuevo.nombre.trim() || !nuevo.descripcion.trim()) {
       Swal.fire({
         icon: 'warning',
@@ -50,13 +66,14 @@ function AdminServicios() {
 
     try {
       if (editando) {
-        // Editar servicio existente
+        // Actualiza un servicio existente
         const res = await axios.put(`http://localhost:5000/api/servicios/${editando._id}`, nuevo, {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
+          headers: { Authorization: `Bearer ${token}` }
         });
+
+        // Actualiza la lista local de servicios con la respuesta del backend
         setServicios(servicios.map(s => s._id === editando._id ? res.data : s));
+
         Swal.fire({
           icon: 'success',
           title: 'Servicio actualizado',
@@ -65,13 +82,14 @@ function AdminServicios() {
           timer: 3000
         });
       } else {
-        // Crear nuevo servicio
+        // Crea un nuevo servicio
         const res = await axios.post('http://localhost:5000/api/servicios', nuevo, {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
+          headers: { Authorization: `Bearer ${token}` }
         });
+
+        // Añade el nuevo servicio a la lista local
         setServicios([...servicios, res.data]);
+
         Swal.fire({
           icon: 'success',
           title: 'Servicio creado',
@@ -81,9 +99,11 @@ function AdminServicios() {
         });
       }
 
+      // Limpieza y cierre del modal
       setNuevo({ nombre: '', descripcion: '' });
       setModalVisible(false);
       setEditando(null);
+
     } catch (error) {
       console.error('Error al guardar servicio:', error);
       Swal.fire({
@@ -96,6 +116,7 @@ function AdminServicios() {
     }
   };
 
+  // Elimina un servicio con confirmación previa
   const eliminarServicio = async (id) => {
     const confirmacion = await Swal.fire({
       title: '¿Eliminar servicio?',
@@ -112,11 +133,10 @@ function AdminServicios() {
 
     try {
       await axios.delete(`http://localhost:5000/api/servicios/${id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
+        headers: { Authorization: `Bearer ${token}` }
       });
 
+      // Elimina el servicio de la lista local
       setServicios(servicios.filter(s => s._id !== id));
 
       Swal.fire({
@@ -140,6 +160,7 @@ function AdminServicios() {
 
   return (
     <div className="min-h-screen bg-gray-100 p-6">
+      {/* Encabezado y botón para crear nuevo servicio */}
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold">Gestión de Servicios</h2>
         <button
@@ -150,7 +171,7 @@ function AdminServicios() {
         </button>
       </div>
 
-      {/* Modal de creación/edición */}
+      {/* Modal de creación o edición */}
       {modalVisible && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
           <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
@@ -194,7 +215,7 @@ function AdminServicios() {
         </div>
       )}
 
-      {/* Listado de servicios */}
+      {/* Listado de servicios existentes */}
       {servicios.length === 0 ? (
         <p className="text-center text-gray-600">No hay servicios registrados.</p>
       ) : (

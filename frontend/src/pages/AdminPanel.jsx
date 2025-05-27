@@ -1,7 +1,9 @@
-
+// Importa hooks de React y librerías externas
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import Swal from 'sweetalert2';
+
+// Importa y configura componentes de Chart.js para mostrar gráficas
 import { Bar } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -13,9 +15,12 @@ import {
   Legend
 } from 'chart.js';
 
+// Registro de componentes de gráfica
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
+// Componente principal del panel de administración
 function AdminPanel() {
+  // Estados para manejar datos del sistema y filtros
   const [reservas, setReservas] = useState([]);
   const [filtro, setFiltro] = useState('');
   const [fechaFiltro, setFechaFiltro] = useState('');
@@ -31,6 +36,7 @@ function AdminPanel() {
 
   const token = localStorage.getItem('token');
 
+  // Carga todas las reservas del sistema (requiere token admin)
   const obtenerTodasLasReservas = async () => {
     try {
       const res = await axios.get('http://localhost:5000/api/reservas/admin/todas-las-reservas', {
@@ -43,6 +49,7 @@ function AdminPanel() {
     }
   };
 
+  // Carga las estadísticas generales del sistema (usuarios, servicios, reservas)
   const obtenerEstadisticas = async () => {
     try {
       const res = await axios.get('http://localhost:5000/api/admin/estadisticas', {
@@ -54,6 +61,7 @@ function AdminPanel() {
     }
   };
 
+  // Obtiene los datos para la gráfica de reservas por servicio
   const obtenerDatosGrafica = async () => {
     try {
       const res = await axios.get('http://localhost:5000/api/admin/reservas-por-servicio', {
@@ -65,16 +73,19 @@ function AdminPanel() {
     }
   };
 
+  // Carga inicial del componente: obtiene reservas, estadísticas y gráfica
   useEffect(() => {
     obtenerTodasLasReservas();
     obtenerEstadisticas();
     obtenerDatosGrafica();
   }, []);
 
+  // Reinicia paginación cuando se aplica un filtro
   useEffect(() => {
     setPaginaActual(1);
   }, [filtro, fechaFiltro]);
 
+  // Elimina una reserva con confirmación
   const eliminarReserva = async (id) => {
     const confirmacion = await Swal.fire({
       title: '¿Estás seguro?',
@@ -101,6 +112,7 @@ function AdminPanel() {
     }
   };
 
+  // Exporta reservas filtradas a un archivo CSV
   const exportarCSV = () => {
     if (reservasFiltradas.length === 0) {
       Swal.fire('Sin datos', 'No hay reservas para exportar.', 'info');
@@ -129,11 +141,13 @@ function AdminPanel() {
     document.body.removeChild(link);
   };
 
+  // Restablece los filtros aplicados
   const resetearFiltros = () => {
     setFiltro('');
     setFechaFiltro('');
   };
 
+  // Aplica filtros de búsqueda por texto y fecha
   const reservasFiltradas = reservas.filter((reserva) => {
     const termino = filtro.toLowerCase();
     const coincideTexto =
@@ -152,14 +166,17 @@ function AdminPanel() {
     return coincideTexto && coincideFecha;
   });
 
+  // Paginación de los resultados
   const totalPaginas = Math.ceil(reservasFiltradas.length / reservasPorPagina);
   const indiceInicio = (paginaActual - 1) * reservasPorPagina;
   const reservasPaginadas = reservasFiltradas.slice(indiceInicio, indiceInicio + reservasPorPagina);
 
+  // Render del componente
   return (
     <div className="min-h-screen bg-gray-100 p-6">
       <h2 className="text-2xl font-bold text-center mb-6">Panel de Administrador</h2>
 
+      {/* Tarjetas de estadísticas generales */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-5xl mx-auto mb-6">
         <div className="bg-white shadow p-4 rounded text-center">
           <h3 className="text-sm text-gray-500">Usuarios</h3>
@@ -175,6 +192,7 @@ function AdminPanel() {
         </div>
       </div>
 
+      {/* Filtros y acciones */}
       <div className="max-w-5xl mx-auto mb-6 flex flex-col md:flex-row justify-between gap-4">
         <input
           type="text"
@@ -203,10 +221,12 @@ function AdminPanel() {
         </button>
       </div>
 
+      {/* Mensajes de error o sin resultados */}
       {mensaje && <p className="text-center text-red-600 font-semibold mb-4">{mensaje}</p>}
       {reservasFiltradas.length === 0 ? (
         <p className="text-center text-gray-600">No se encontraron reservas.</p>
       ) : (
+        // Tabla de reservas con paginación
         <div className="max-w-5xl mx-auto overflow-x-auto mb-6">
           <table className="w-full bg-white shadow rounded text-center">
             <thead className="bg-blue-600 text-white">
@@ -240,6 +260,7 @@ function AdminPanel() {
         </div>
       )}
 
+      {/* Paginación */}
       {totalPaginas > 1 && (
         <div className="flex justify-center items-center mt-4 gap-4">
           <button
@@ -260,6 +281,7 @@ function AdminPanel() {
         </div>
       )}
 
+      {/* Gráfico de barras */}
       {datosGrafica.length > 0 && (
         <div className="max-w-5xl mx-auto bg-white p-4 rounded shadow mt-10">
           <h3 className="text-lg font-semibold text-center mb-4 text-blue-700">Reservas por servicio</h3>
@@ -294,4 +316,5 @@ function AdminPanel() {
   );
 }
 
+// Exporta el componente para uso en rutas de administración
 export default AdminPanel;

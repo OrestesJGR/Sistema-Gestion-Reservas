@@ -3,12 +3,22 @@ import axios from 'axios';
 import Swal from 'sweetalert2';
 
 function Servicios() {
+  // Estado que guarda los servicios disponibles
   const [servicios, setServicios] = useState([]);
+
+  // Guarda la fecha seleccionada por servicio
   const [fechas, setFechas] = useState({});
+
+  // Guarda los horarios disponibles por servicio en la fecha seleccionada
   const [horarios, setHorarios] = useState({});
+
+  // Guarda el horario concreto que el usuario seleccionó para cada servicio
   const [horarioSeleccionado, setHorarioSeleccionado] = useState({});
+
+  // Token del usuario autenticado
   const token = localStorage.getItem('token');
 
+  // Carga los servicios desde la API al montar el componente
   useEffect(() => {
     const obtenerServicios = async () => {
       try {
@@ -22,6 +32,7 @@ function Servicios() {
     obtenerServicios();
   }, []);
 
+  // Maneja el cambio de fecha para un servicio específico
   const manejarCambioFecha = async (idServicio, fecha) => {
     setFechas((prev) => ({ ...prev, [idServicio]: fecha }));
     setHorarioSeleccionado((prev) => ({ ...prev, [idServicio]: '' }));
@@ -43,6 +54,7 @@ function Servicios() {
     }
   };
 
+  // Realiza la reserva del servicio en la fecha y hora seleccionada
   const reservarServicio = async (idServicio) => {
     const fecha = fechas[idServicio];
     const hora = horarioSeleccionado[idServicio];
@@ -61,6 +73,7 @@ function Servicios() {
     const fechaCompleta = new Date(hora);
     const ahora = new Date();
 
+    // Validación de fechas pasadas
     if (fechaCompleta <= ahora) {
       Swal.fire({
         icon: 'error',
@@ -71,7 +84,6 @@ function Servicios() {
       });
       return;
     }
-
 
     try {
       await axios.post(
@@ -95,6 +107,7 @@ function Servicios() {
         timer: 3000
       });
 
+      // Redirección automática a “Mis Reservas”
       setTimeout(() => {
         window.location.href = '/mis-reservas';
       }, 3000);
@@ -124,8 +137,10 @@ function Servicios() {
               <p className="text-gray-700 mb-4">{servicio.descripcion}</p>
             </div>
 
+            {/* Si el usuario está autenticado */}
             {token ? (
               <>
+                {/* Fecha */}
                 <input
                   type="date"
                   className="mb-3 w-full border rounded px-3 py-2 text-sm"
@@ -133,6 +148,7 @@ function Servicios() {
                   onChange={(e) => manejarCambioFecha(servicio._id, e.target.value)}
                 />
 
+                {/* Horarios disponibles */}
                 {horarios[servicio._id] && (
                   <select
                     className="mb-3 w-full border rounded px-3 py-2 text-sm"
@@ -159,6 +175,7 @@ function Servicios() {
                   </select>
                 )}
 
+                {/* Botón de reserva */}
                 <button
                   onClick={() => reservarServicio(servicio._id)}
                   className="mt-auto bg-green-600 text-white py-2 rounded hover:bg-green-700 transition"

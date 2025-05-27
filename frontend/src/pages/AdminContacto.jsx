@@ -1,17 +1,26 @@
+// Importa hooks y librerías necesarias
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import Swal from 'sweetalert2';
 
+// Componente funcional para la gestión de mensajes desde el panel de administrador
 function AdminContacto() {
+  // Estado para almacenar los mensajes obtenidos
   const [mensajes, setMensajes] = useState([]);
+
+  // Estado para alternar entre mensajes archivados y activos
   const [verArchivados, setVerArchivados] = useState(false);
+
+  // Recupera el token del usuario autenticado
   const token = localStorage.getItem('token');
 
+  // Función para obtener mensajes desde el backend según si están archivados o no
   const obtenerMensajes = async () => {
     try {
-      const res = await axios.get(`http://localhost:5000/api/contacto?archivados=${verArchivados}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await axios.get(
+        `http://localhost:5000/api/contacto?archivados=${verArchivados}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
       setMensajes(res.data);
     } catch (error) {
       console.error('Error al obtener mensajes:', error);
@@ -23,6 +32,7 @@ function AdminContacto() {
     }
   };
 
+  // Función para archivar (ocultar) un mensaje
   const archivarMensaje = async (id) => {
     const confirmacion = await Swal.fire({
       title: '¿Archivar mensaje?',
@@ -42,6 +52,7 @@ function AdminContacto() {
         headers: { Authorization: `Bearer ${token}` }
       });
 
+      // Elimina el mensaje del estado actual sin recargar
       setMensajes((prev) => prev.filter((m) => m._id !== id));
 
       Swal.fire({
@@ -61,12 +72,16 @@ function AdminContacto() {
     }
   };
 
+  // Función para restaurar un mensaje previamente archivado
   const restaurarMensaje = async (id) => {
     try {
-      await axios.put(`http://localhost:5000/api/contacto/${id}/restaurar`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await axios.put(
+        `http://localhost:5000/api/contacto/${id}/restaurar`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
 
+      // Elimina el mensaje restaurado del estado local
       setMensajes((prev) => prev.filter((m) => m._id !== id));
 
       Swal.fire({
@@ -86,28 +101,34 @@ function AdminContacto() {
     }
   };
 
+  // useEffect ejecuta la carga de mensajes al montar el componente o cambiar la vista (activos/archivados)
   useEffect(() => {
     obtenerMensajes();
   }, [verArchivados]);
 
+  // Renderiza la interfaz de mensajes de contacto
   return (
     <div className="min-h-screen bg-gray-100 p-6">
       <h2 className="text-2xl font-bold text-center mb-4">Mensajes de Contacto</h2>
 
+      {/* Botón para alternar entre mensajes archivados y activos */}
       <div className="text-center mb-6">
         <button
           onClick={() => {
             setVerArchivados(!verArchivados);
-            setMensajes([]); // limpiar la vista mientras carga
+            setMensajes([]); // Limpia la vista mientras se cargan nuevos datos
           }}
           className={`px-4 py-2 rounded font-medium shadow transition ${
-            verArchivados ? 'bg-yellow-500 hover:bg-yellow-600 text-white' : 'bg-gray-600 hover:bg-gray-700 text-white'
+            verArchivados
+              ? 'bg-yellow-500 hover:bg-yellow-600 text-white'
+              : 'bg-gray-600 hover:bg-gray-700 text-white'
           }`}
         >
           {verArchivados ? 'Ver mensajes activos' : 'Ver archivados'}
         </button>
       </div>
 
+      {/* Mensajes cargados o mensaje de vacío */}
       {mensajes.length === 0 ? (
         <p className="text-center text-gray-600">
           {verArchivados ? 'No hay mensajes archivados.' : 'No hay mensajes activos.'}
@@ -116,6 +137,7 @@ function AdminContacto() {
         <div className="max-w-5xl mx-auto space-y-4">
           {mensajes.map((msg) => (
             <div key={msg._id} className="bg-white shadow p-4 rounded relative">
+              {/* Botón superior derecho: archivar o restaurar */}
               {verArchivados ? (
                 <button
                   onClick={() => restaurarMensaje(msg._id)}
@@ -137,6 +159,7 @@ function AdminContacto() {
                   </svg>
                 </button>
               )}
+              {/* Contenido del mensaje */}
               <p className="text-sm text-gray-500 mb-1">
                 <strong>Fecha:</strong> {new Date(msg.creadoEn).toLocaleString()}
               </p>
@@ -151,4 +174,5 @@ function AdminContacto() {
   );
 }
 
+// Exporta el componente para uso en el panel de administración
 export default AdminContacto;

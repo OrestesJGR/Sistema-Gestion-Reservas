@@ -3,20 +3,32 @@ import axios from 'axios';
 import Swal from 'sweetalert2';
 
 function Perfil() {
+  // Usuario autenticado
   const [usuario, setUsuario] = useState(null);
+
+  // Controla si se está editando el perfil
   const [editando, setEditando] = useState(false);
+
+  // Estado del formulario de edición de perfil
   const [formData, setFormData] = useState({ nombre: '', email: '' });
+
+  // Controla la visibilidad del formulario de contraseña
   const [mostrandoPassword, setMostrandoPassword] = useState(false);
+
+  // Estado del formulario de cambio de contraseña
   const [passForm, setPassForm] = useState({ antigua: '', nueva: '' });
 
   const token = localStorage.getItem('token');
 
+  // Carga el perfil del usuario desde la API al montar el componente
   useEffect(() => {
     const obtenerPerfil = async () => {
       try {
         const res = await axios.get('http://localhost:5000/api/usuarios/perfil', {
           headers: { Authorization: `Bearer ${token}` }
         });
+
+        // Guardamos los datos obtenidos
         setUsuario(res.data.usuario);
         setFormData({
           nombre: res.data.usuario.nombre,
@@ -30,10 +42,12 @@ function Perfil() {
     obtenerPerfil();
   }, []);
 
+  // Maneja el cambio en los inputs del perfil
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  // Guarda los cambios del perfil
   const handleGuardar = async () => {
     try {
       const res = await axios.put(
@@ -42,6 +56,7 @@ function Perfil() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
+      // Feedback y actualización de estado
       Swal.fire({
         icon: 'success',
         title: 'Perfil actualizado',
@@ -62,6 +77,7 @@ function Perfil() {
     }
   };
 
+  // Cambia la contraseña del usuario
   const handleCambiarPassword = async () => {
     try {
       await axios.put(
@@ -71,12 +87,14 @@ function Perfil() {
           headers: { Authorization: `Bearer ${token}` }
         }
       );
+
       Swal.fire({
         icon: 'success',
         title: 'Contraseña actualizada',
         timer: 2000,
         showConfirmButton: false
       });
+
       setMostrandoPassword(false);
       setPassForm({ antigua: '', nueva: '' });
     } catch (error) {
@@ -88,6 +106,7 @@ function Perfil() {
     }
   };
 
+  // Muestra un loader mientras se cargan los datos
   if (!usuario) {
     return <p className="text-center mt-10">Cargando perfil...</p>;
   }
@@ -97,6 +116,7 @@ function Perfil() {
       <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
         <h2 className="text-2xl font-bold text-center text-blue-600 mb-4">Mi Perfil</h2>
 
+        {/* Modo edición del perfil */}
         {editando ? (
           <div className="space-y-4">
             <div>
@@ -119,7 +139,6 @@ function Perfil() {
                 className="w-full border px-3 py-2 rounded"
               />
             </div>
-
             <div className="flex justify-between">
               <button
                 onClick={() => setEditando(false)}
@@ -136,6 +155,7 @@ function Perfil() {
             </div>
           </div>
         ) : (
+          // Vista de solo lectura del perfil
           <div className="space-y-2 text-sm">
             <p><strong>Nombre:</strong> {usuario.nombre}</p>
             <p><strong>Email:</strong> {usuario.email}</p>
@@ -159,6 +179,7 @@ function Perfil() {
           </div>
         )}
 
+        {/* Sección para cambiar la contraseña */}
         {mostrandoPassword && (
           <div className="mt-6 border-t pt-4">
             <h4 className="text-sm font-bold mb-2 text-red-600">Cambiar contraseña</h4>

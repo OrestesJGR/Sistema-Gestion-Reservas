@@ -3,12 +3,16 @@ import axios from 'axios';
 import Swal from 'sweetalert2';
 
 function Register() {
+  // Estados del formulario
   const [nombre, setNombre] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+
+  // Estados para evaluación de la contraseña
   const [passwordStrength, setPasswordStrength] = useState(0);
   const [passwordFeedback, setPasswordFeedback] = useState('');
 
+  // Función que evalúa la seguridad de la contraseña
   const evaluarFortalezaPassword = (password) => {
     let puntuacion = 0;
     if (password.length >= 8) puntuacion++;
@@ -28,6 +32,7 @@ function Register() {
     }
   };
 
+  // Maneja el envío del formulario
   const handleRegister = async (e) => {
     e.preventDefault();
 
@@ -49,6 +54,7 @@ function Register() {
         window.location.href = '/login';
       });
 
+      // Limpieza del formulario
       setNombre('');
       setEmail('');
       setPassword('');
@@ -72,7 +78,9 @@ function Register() {
     <div className="min-h-screen flex items-start justify-center bg-gray-100 pt-16 px-4">
       <div className="bg-white p-6 rounded-lg shadow-md w-full max-w-md">
         <h2 className="text-2xl font-bold mb-4 text-center">Crear cuenta</h2>
+
         <form onSubmit={handleRegister} className="space-y-4">
+          {/* Campo nombre */}
           <input
             type="text"
             placeholder="Nombre completo"
@@ -81,6 +89,8 @@ function Register() {
             className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring focus:ring-blue-200"
             required
           />
+
+          {/* Campo email */}
           <input
             type="email"
             placeholder="Correo electrónico"
@@ -89,6 +99,8 @@ function Register() {
             className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring focus:ring-blue-200"
             required
           />
+
+          {/* Campo contraseña con evaluación de seguridad */}
           <input
             type="password"
             placeholder="Contraseña"
@@ -101,7 +113,7 @@ function Register() {
             required
           />
 
-          {/* Barra de seguridad de contraseña */}
+          {/* Barra visual de fortaleza */}
           <div className="w-full bg-gray-200 rounded h-2">
             <div
               className={`h-full rounded transition-all duration-300 ${
@@ -117,6 +129,7 @@ function Register() {
             Seguridad: {passwordFeedback}
           </p>
 
+          {/* Botón de envío */}
           <button
             type="submit"
             className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition"
