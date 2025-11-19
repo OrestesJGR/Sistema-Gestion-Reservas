@@ -1,24 +1,18 @@
+// src/pages/Servicios.jsx
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import Swal from 'sweetalert2';
+import { FaCalendarAlt, FaClock, FaClipboardCheck } from 'react-icons/fa';
 
 function Servicios() {
-  // Estado que guarda los servicios disponibles
   const [servicios, setServicios] = useState([]);
-
-  // Guarda la fecha seleccionada por servicio
   const [fechas, setFechas] = useState({});
-
-  // Guarda los horarios disponibles por servicio en la fecha seleccionada
   const [horarios, setHorarios] = useState({});
-
-  // Guarda el horario concreto que el usuario seleccionó para cada servicio
   const [horarioSeleccionado, setHorarioSeleccionado] = useState({});
+  const [cargandoReserva, setCargandoReserva] = useState(null);
 
-  // Token del usuario autenticado
   const token = localStorage.getItem('token');
 
-  // Carga los servicios desde la API al montar el componente
   useEffect(() => {
     const obtenerServicios = async () => {
       try {
@@ -32,7 +26,6 @@ function Servicios() {
     obtenerServicios();
   }, []);
 
-  // Maneja el cambio de fecha para un servicio específico
   const manejarCambioFecha = async (idServicio, fecha) => {
     setFechas((prev) => ({ ...prev, [idServicio]: fecha }));
     setHorarioSeleccionado((prev) => ({ ...prev, [idServicio]: '' }));
@@ -54,7 +47,6 @@ function Servicios() {
     }
   };
 
-  // Realiza la reserva del servicio en la fecha y hora seleccionada
   const reservarServicio = async (idServicio) => {
     const fecha = fechas[idServicio];
     const hora = horarioSeleccionado[idServicio];
@@ -73,7 +65,6 @@ function Servicios() {
     const fechaCompleta = new Date(hora);
     const ahora = new Date();
 
-    // Validación de fechas pasadas
     if (fechaCompleta <= ahora) {
       Swal.fire({
         icon: 'error',
@@ -86,6 +77,7 @@ function Servicios() {
     }
 
     try {
+      setCargandoReserva(idServicio);
       await axios.post(
         'http://localhost:5000/api/reservas',
         {
@@ -107,7 +99,6 @@ function Servicios() {
         timer: 3000
       });
 
-      // Redirección automática a “Mis Reservas”
       setTimeout(() => {
         window.location.href = '/mis-reservas';
       }, 3000);
@@ -120,27 +111,33 @@ function Servicios() {
         showConfirmButton: false,
         timer: 3000
       });
+    } finally {
+      setCargandoReserva(null);
     }
   };
 
   return (
     <div className="min-h-screen bg-gray-100 p-6">
-      <h2 className="text-2xl font-bold mb-6 text-center">Servicios disponibles</h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+      <h2 className="text-3xl font-bold mb-6 text-center text-blue-700">Servicios disponibles</h2>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {servicios.map((servicio) => (
           <div
             key={servicio._id}
-            className="bg-white p-4 rounded shadow hover:shadow-md transition flex flex-col justify-between"
+            className="bg-white shadow-md rounded-lg p-5 hover:shadow-lg transition duration-300 flex flex-col justify-between"
           >
             <div>
-              <h3 className="text-xl font-semibold text-blue-600 mb-2">{servicio.nombre}</h3>
+              <h3 className="text-xl font-semibold text-blue-600 mb-2 flex items-center gap-2">
+                <FaClipboardCheck className="text-green-600" /> {servicio.nombre}
+              </h3>
               <p className="text-gray-700 mb-4">{servicio.descripcion}</p>
             </div>
 
-            {/* Si el usuario está autenticado */}
             {token ? (
               <>
-                {/* Fecha */}
+                <label className="block text-sm font-medium mb-1 text-gray-600">
+                  <FaCalendarAlt className="inline-block mr-1" /> Selecciona fecha
+                </label>
                 <input
                   type="date"
                   className="mb-3 w-full border rounded px-3 py-2 text-sm"
@@ -148,39 +145,45 @@ function Servicios() {
                   onChange={(e) => manejarCambioFecha(servicio._id, e.target.value)}
                 />
 
-                {/* Horarios disponibles */}
                 {horarios[servicio._id] && (
-                  <select
-                    className="mb-3 w-full border rounded px-3 py-2 text-sm"
-                    value={horarioSeleccionado[servicio._id] || ''}
-                    onChange={(e) =>
-                      setHorarioSeleccionado((prev) => ({
-                        ...prev,
-                        [servicio._id]: e.target.value
-                      }))
-                    }
-                  >
-                    <option value="">Selecciona una hora</option>
-                    {horarios[servicio._id].map((h) => {
-                      const horaLocal = new Date(h).toLocaleTimeString([], {
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      });
-                      return (
-                        <option key={h} value={h}>
-                          {horaLocal}
-                        </option>
-                      );
-                    })}
-                  </select>
+                  <>
+                    <label className="block text-sm font-medium mb-1 text-gray-600">
+                      <FaClock className="inline-block mr-1" /> Horario disponible
+                    </label>
+                    <select
+                      className="mb-3 w-full border rounded px-3 py-2 text-sm"
+                      value={horarioSeleccionado[servicio._id] || ''}
+                      onChange={(e) =>
+                        setHorarioSeleccionado((prev) => ({
+                          ...prev,
+                          [servicio._id]: e.target.value
+                        }))
+                      }
+                    >
+                      <option value="">Selecciona una hora</option>
+                      {horarios[servicio._id].map((h) => {
+                        const horaLocal = new Date(h).toLocaleTimeString([], {
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        });
+                        return (
+                          <option key={h} value={h}>
+                            {horaLocal}
+                          </option>
+                        );
+                      })}
+                    </select>
+                  </>
                 )}
 
-                {/* Botón de reserva */}
                 <button
                   onClick={() => reservarServicio(servicio._id)}
-                  className="mt-auto bg-green-600 text-white py-2 rounded hover:bg-green-700 transition"
+                  disabled={cargandoReserva === servicio._id}
+                  className={`mt-auto bg-green-600 text-white py-2 rounded hover:bg-green-700 transition ${
+                    cargandoReserva === servicio._id ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
                 >
-                  Reservar
+                  {cargandoReserva === servicio._id ? 'Reservando...' : 'Reservar'}
                 </button>
               </>
             ) : (
